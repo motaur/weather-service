@@ -1,5 +1,7 @@
 = Weather-service
 
+Web API service with Java, Maven, Vertx that provides weather forecasts up to 5 days.
+
 image:https://img.shields.io/badge/vert.x-3.7.1-purple.svg[link="https://vertx.io"]
 
 == Building
