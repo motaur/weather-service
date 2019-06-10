@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - MainVerticle",
+            "request": "launch",
+            "mainClass": "com.example.starter.MainVerticle",
+            "projectName": "starter"
+        }
+    ]
+}
