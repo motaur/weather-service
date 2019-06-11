@@ -6,7 +6,7 @@ Web API service with Java, Maven, Vertx that provides weather forecasts up to 5 
 
 .Routes
 |=== 
-|Route |Description | Response Format
+|Route |Description | Response Example
 
 |*/* 
 |returns message with port of the server
