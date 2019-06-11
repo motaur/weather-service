@@ -1,8 +1,98 @@
 = Weather-service
 
+image:https://img.shields.io/badge/vert.x-3.7.1-purple.svg[link="https://vertx.io"]
+
 Web API service with Java, Maven, Vertx that provides weather forecasts up to 5 days.
 
-image:https://img.shields.io/badge/vert.x-3.7.1-purple.svg[link="https://vertx.io"]
+.Routes
+|=== 
+|Route |Description | Response Format
+
+|*/* 
+|returns message with port of the server
+|*String*: HTTP server started on port 43418
+
+|*/healthcheck* 
+|returns healthcheck message 
+|*String:* "I am Alive!"
+
+|*/hello?name={your name}* 
+|returns message: Hello + submited name
+|String: "Hello {your name}"
+
+|*/cities?country={countrycode}*
+|returns list of available cities for submited country, country codes can be found link:++https://countrycode.org/++[here]
+|```
+[
+    {
+        "id": "Faleasao county",
+        "text": "Faleasao county"
+    },
+    {
+        "id": "Swains island",
+        "text": "Swains island"
+    },
+    {
+        "id": "Faleniu",
+        "text": "Faleniu"
+]
+```
+
+
+|*/currentforecasts?country={countrycode}&city={city name}*
+|returns current weather in submitted city in celcious degree
+|```
+{
+    "city": "Tel Aviv",
+    "country": "IL",
+    "temp": 23,
+    "humidity": 53,
+    "weather": "Clear",
+    "description": "Clear sky",
+    "icon": "http://openweathermap.org/img/w/01n.png",
+    "date": "2019-06-12"
+}
+```
+
+|*/forecasts?country={countrey code}&city={city name}&days={number of days}*
+|returns forecast for submited amount of days, that should be between 1 and 5
+|```
+{
+    "id": 2950158,
+    "city": "Berlin",
+    "country": "DE",
+    "forecasts": [
+        {
+            "date": "2019-06-12",
+            "weather": "Rain",
+            "description": "Light rain",
+            "icon": "http://openweathermap.org/img/w/10d.png",
+            "wind_speed": 3,
+            "wind_deg": 111,
+            "dayTemp": 17,
+            "minTemp": 17,
+            "maxTemp": 17,
+            "humidity": 93
+        },
+        {
+            "date": "2019-06-13",
+            "weather": "Clear",
+            "description": "Clear sky",
+            "icon": "http://openweathermap.org/img/w/01d.png",
+            "wind_speed": 3,
+            "wind_deg": 200,
+            "dayTemp": 16,
+            "minTemp": 16,
+            "maxTemp": 16,
+            "humidity": 72
+        }
+    ]
+}```    
+|===
+
+All parametres are required, no authorization/authantication, response format: Json
+
+ 
 
 == Building
 
