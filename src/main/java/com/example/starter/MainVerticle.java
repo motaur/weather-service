@@ -60,6 +60,7 @@ public class MainVerticle extends AbstractVerticle
   public void start(Future<Void> startFuture) throws Exception 
   {    
 	// Init
+	int port = Integer.getInteger("http.port", 8080);
 	initTree();  
 	options = new WebClientOptions();
     client = WebClient.create(vertx, options);
@@ -87,7 +88,7 @@ public class MainVerticle extends AbstractVerticle
     	.handler(routingContext -> {
       HttpServerResponse response = routingContext.response();
       response.putHeader("content-type", "text/plain");
-      response.end("HTTP server started on port 8080");
+      response.end("HTTP server started on port " + port);
     });
 
     router.get("/healthcheck")
@@ -102,47 +103,51 @@ public class MainVerticle extends AbstractVerticle
     			.addQueryParam("name", ParameterType.GENERIC_STRING, true))
     	.handler(routingContext -> {
     	
-		      HttpServerResponse response = routingContext.response();
-		      
+		      HttpServerResponse response = routingContext.response();		      
 		      RequestParameters params = routingContext.get("parsedParameters");
-		      RequestParameter name = params.queryParameter("name");
-		      
-		      response.end("Hello " + name);      
+		      RequestParameter name = params.queryParameter("name");		           
 		      
 		      response.putHeader("content-type", "text/plain");
-		  	  response.end("Hello " + name);     
+		  	  response.end(("Hello " + name).trim());     
       
-				});
+	});
 				
-				router.get("/cities")
-				.handler(HTTPRequestValidationHandler.create()
-						.addQueryParam("country", ParameterType.GENERIC_STRING, true))
-				.handler(routingContext -> {
-				
-						HttpServerResponse response = routingContext.response();
-						
-						RequestParameters params = routingContext.get("parsedParameters");
-						RequestParameter c = params.queryParameter("country");					
+	router.get("/cities")
+	.handler(HTTPRequestValidationHandler.create()
+			.addQueryParam("country", ParameterType.GENERIC_STRING, true))
+	.handler(routingContext -> {
+	
+			HttpServerResponse response = routingContext.response();
+			
+			RequestParameters params = routingContext.get("parsedParameters");
+			RequestParameter c = params.queryParameter("country");					
 
-						JsonArray jCities = new JsonArray();						
-						
-						HashMap<String, Integer> cities = countries.get(c.toString().toLowerCase()).getCityes();
-						
-						for(String key : cities.keySet())
-						{
-							JsonObject cityObject = new JsonObject();
-							
-							key = firstToUpper(key);
-							
-							cityObject.put("id", key);
-							cityObject.put("text", key);							
-							
-							jCities.add(cityObject);
-						}									
-						
-						response.putHeader("content-type", "application/json");
-						response.end(jCities.encodePrettily());			
-				});
+			JsonArray jCities = new JsonArray();
+			
+			if(countries.get(c.toString().toLowerCase().trim()) == null)
+			{
+				response.putHeader("content-type", "text/plain");
+				response.end("No country found");	
+			}
+			
+			HashMap<String, Integer> cities = countries.get(c.toString().toLowerCase().trim()).getCityes();	
+			
+			
+			for(String key : cities.keySet())
+			{
+				JsonObject cityObject = new JsonObject();
+				
+				key = firstToUpper(key);
+				
+				cityObject.put("id", key);
+				cityObject.put("text", key);							
+				
+				jCities.add(cityObject);
+			}									
+			
+			response.putHeader("content-type", "application/json");
+			response.end(jCities.encodePrettily());			
+	});
 
     router.get("/currentforecasts")
     .handler(HTTPRequestValidationHandler.create()
@@ -155,7 +160,7 @@ public class MainVerticle extends AbstractVerticle
       RequestParameter city = params.queryParameter("city");
       RequestParameter country = params.queryParameter("country");
       
-      int cityId = getCityId(city, country);            
+      int cityId = getCityId(city.getString(), country.getString());            
       
       if(cityId == 0)
       {
@@ -231,7 +236,7 @@ public class MainVerticle extends AbstractVerticle
         }
         else
         {   
-        	int cityId = getCityId(city, country);
+        	int cityId = getCityId(city.getString(), country.getString());
         	
         	if(cityId == 0)
             {
@@ -349,11 +354,11 @@ public class MainVerticle extends AbstractVerticle
     router.route().handler(StaticHandler.create());
 
     // start server
-    server.requestHandler(router).listen(Integer.getInteger("http.port"), result -> {
+    server.requestHandler(router).listen(port, result -> {
       if (result.succeeded()) 
       {
         startFuture.complete();
-        System.out.println("HTTP server started on port 8080");
+        System.out.println("HTTP server started on port " + port);
       } 
       else
         startFuture.fail(result.cause());
@@ -361,15 +366,23 @@ public class MainVerticle extends AbstractVerticle
   } 
   
   //capitalize the first letter
-  private String firstToUpper(String key) 
+  public String firstToUpper(String key) 
   {
-	 key = key.substring(0,1).toUpperCase() + key.substring(1).toLowerCase(); 
+	if  (key == null)
+	   return "";
+	   
+	key = key.trim();  
+	
+	if  (key.equals(""))
+	   return "";
+		 
+	key = key.substring(0,1).toUpperCase() + key.substring(1).toLowerCase(); 
 	  
-	 return key;
+	return key;
   }
 
-private void initTree() 
-  {
+  public void initTree() 
+  {	
 	  try 
 	  {
 		  System.out.println("Loading city list...");		
@@ -387,8 +400,7 @@ private void initTree()
 			  
 			  //if this country still not exists
 			  if(countries.get(country) == null)
-			  	  countries.put(country, new Country(country));
-			  
+			  	  countries.put(country, new Country(country));			  
 		  }
 		  
 		  //add cities to countries
@@ -415,13 +427,13 @@ private void initTree()
   }
 
 //reads city and country from tree and returns an id
-  private int getCityId(RequestParameter cityParam, RequestParameter countryParam) 
+  public int getCityId(String cityParam, String countryParam) 
   {
 	 int id = 0;
 	 
 	 try
 	 {
-		 id = countries.get(countryParam.getString().toLowerCase()).getCityes().get(cityParam.getString().toLowerCase());
+		id = countries.get(countryParam.toLowerCase().trim()).getCityes().get(cityParam.toLowerCase().trim());
 	 }
 	 catch(NullPointerException e)
 	 {
@@ -431,26 +443,22 @@ private void initTree()
 	 return id;
   }
 
-  //returns an average of values from the list
-  private double average(ArrayList<Number> list)
+  //returns an int average of numbers from the list
+  public double average(ArrayList<Number> list)
   {
-	  int average = 0;
+	int average = 0;
+	
+	for(Number x: list)
+		average += x.intValue();  
 	  
-	  for(Number x: list)
-	  		average += x.intValue();  
-	  
-	  return average/list.size();
-  }
-  
-  //rounds a value for x digits after point (places param)
-  /*private double round(double value, int places) 
-  {
-	    if (places < 0) throw new IllegalArgumentException();
-
-	    long factor = (long) Math.pow(10, places);
-	    value = value * factor;
-	    long tmp = Math.round(value);
-	    return (double) tmp / factor;
-  }  */
-  
+	try
+	{
+		average = average/list.size();
+	}
+	catch(ArithmeticException e)
+	{
+		System.out.println("Arithmetic Exception: / by 0");
+	}	
+	return average;	  
+  }   
 }
