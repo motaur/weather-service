@@ -96,17 +96,17 @@ All parametres are required, no authorization/authantication, response format: J
 
 == Building
 
-To launch your tests:
+To launch tests:
 ```
 ./mvnw clean test
 ```
 
-To package your application:
+To package the application:
 ```
 ./mvnw clean package
 ```
 
-To run your application:
+To run the application:
 ```
 ./mvnw clean compile exec:java
 ```
